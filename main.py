@@ -12,7 +12,7 @@ class CommandLineInputParser:
     def getEntryFile(self):
         return self._main_file
 
-class FirstPassParser:
+class Parser:
     def __init__(self, entry_file):
         self._file_read = open(entry_file, "r")
         self._file_read_secondary = 0
@@ -23,6 +23,8 @@ class FirstPassParser:
         self._code_segment = True
 
     def setCodeOrigin(self, num):
+        if not self._code_segment:
+            raise Exception("\".org\" cannot be set in a data segment!")
         self._code_address = int(num)
 
     def setCodeSegment(self):
@@ -37,9 +39,9 @@ class FirstPassParser:
         if filename == self._file_read.name:
             raise Exception("Cannot open file that is already being read.")
         self._file_read_secondary = open(filename, "r")
-        self.parse(True)
+        self.first_parse(True)
 
-    def parse(self, secondary_file = False):
+    def first_parse(self, secondary_file = False):
         filestream = self._file_read_secondary if secondary_file else self._file_read
         line_num = 1
         while True:
@@ -55,33 +57,66 @@ class FirstPassParser:
             # Split the line on whitespace
             split_line = line.split()
 
-            # check if line is empty
-            if len(split_line) == 0:
-                # if it is empty, don't increment code address
-                self._code_address -= 1
+            if self._code_segment:
 
-            # Check if there is something in the first column
-            elif not re.match(r'\s', line):
-                if re.match(r'\.', line): # matches a pseudoop
-                    try:
-                        if len(split_line) > 1:
-                            PseudoOp.handlePseudoOp(self, split_line[0], split_line[1])
-                        else:
-                            PseudoOp.handlePseudoOp(self, split_line[0])
-                    except Exception as error:
-                        ErrorHandler.genericError(filestream.name, line_num, error)
+                # check if line is empty
+                if len(split_line) == 0:
+                    # if it is empty, don't increment code address
+                    self._code_address -= 1
 
-                elif split_line[0].isalnum():
-                    if split_line[0] in self._code_symbol_table:
-                        ErrorHandler.genericError(filestream.name, line_num, f"Label \"{split_line[0]}\" already exists.")
-                    self._code_symbol_table[split_line[0]] = self._code_address
-                else:
-                    ErrorHandler.genericError(filestream.name, line_num, f"\"{split_line[0]}\" is not a valid statement"
-                                                                          "on the first column.")
-                self._code_address -= 1 # nothing in the first line increments code address
+                # Check if there is something in the first column
+                elif not re.match(r'\s', line):
+                    if re.match(r'\.', line): # matches a pseudoop
+                        try:
+                            if len(split_line) > 1:
+                                PseudoOp.handlePseudoOp(self, split_line[0], split_line[1])
+                            else:
+                                PseudoOp.handlePseudoOp(self, split_line[0])
+                        except Exception as error:
+                            ErrorHandler.genericError(filestream.name, line_num, error)
+
+                    elif split_line[0].isalnum():
+                        if split_line[0] in self._code_symbol_table:
+                            ErrorHandler.genericError(filestream.name, line_num, f"Label \"{split_line[0]}\" already defined.")
+                        self._code_symbol_table[split_line[0]] = self._code_address
+                    else:
+                        ErrorHandler.genericError(filestream.name, line_num, f"\"{split_line[0]}\" is not a valid statement"
+                                                                            "on the first column.")
+                    self._code_address -= 1 # nothing in the first line increments code address
                     
-            self._code_address += 1
+                self._code_address += 1
+
+            # DATA SEGMENT
+            else:
+
+                # Check if there is something in the first column
+                if not re.match(r'\s', line):
+                    if re.match(r'\.', line): # matches a pseudoop
+                        try:
+                            if len(split_line) > 1:
+                                PseudoOp.handlePseudoOp(self, split_line[0], split_line[1])
+                            else:
+                                PseudoOp.handlePseudoOp(self, split_line[0])
+                        except Exception as error:
+                            ErrorHandler.genericError(filestream.name, line_num, error)
+
+                    elif split_line[0].isalnum():
+                        if split_line[0] in self._data_symbol_table:
+                            ErrorHandler.genericError(filestream.name, line_num, f"Variable \"{split_line[0]}\" already defined.")
+                        self._data_symbol_table[split_line[0]] = self._data_address
+                        if len(split_line) < 2 or not split_line[1].isnumeric():
+                            ErrorHandler.genericError(filestream.name, line_num, "Invalid variable length supplied.")
+                        self._data_address += int(split_line[1])
+                    else:
+                        ErrorHandler.genericError(filestream.name, line_num, f"\"{split_line[0]}\" is not a valid statement"
+                                                                            "on the first column.")
+
             line_num += 1
+        
+        filestream.close()
+
+    def second_parse():
+        pass
 
 class PseudoOp:
     def handlePseudoOp(parser, op, arg=""):
@@ -120,6 +155,7 @@ class ErrorHandler:
 
 # Start execution of the assembler
 entry_file = CommandLineInputParser().getEntryFile()
-first_parser = FirstPassParser(entry_file)
-first_parser.parse()
-print(first_parser._code_symbol_table)
+parser = Parser(entry_file)
+parser.first_parse()
+print(parser._code_symbol_table)
+print(parser._data_symbol_table)

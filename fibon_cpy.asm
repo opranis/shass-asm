@@ -44,9 +44,9 @@ Done1			;done with the calculation
     RTS                     ;and return
 
 
-    .dseg
+.dseg
 
-    f       1
-    f1      1
-    f2      1
-    n       1
+f       10
+f1      1
+f2      2
+n       1

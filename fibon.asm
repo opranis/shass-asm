@@ -31,7 +31,7 @@ FibLoop			;loop, computing nth Fibonacci number
     STD   n			;always store new value of n (branch slot)
 
 .include fibon_cpy.asm
-
+.cseg
 FibBody			;compute the next fibonacci number
     LDD   f1		;get the value of f1 in accumulator
     ADD   f2		;compute new fibonacci number (f1+f2)
@@ -46,9 +46,8 @@ Done			;done with the calculation
     LDD   f			;get returned Fibonacci value into accumulator
     RTS                     ;and return
 
-    .dseg
-
-    f       1
-    f1      1
-    f2      1
-    n       1
+.dseg
+ff       1
+ff1      1
+ff2      1
+nf       1
