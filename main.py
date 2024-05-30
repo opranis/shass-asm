@@ -58,10 +58,11 @@ class Parser:
         except Exception as error:
             ErrorHandler.genericError(fin.name, line_num, error)
 
-    def _codeGen(self, strarr, line_num, fin):
+    def _codeGen(self, strarr, line_num, fin, rawline):
         try:
             operands = Operands(strarr[1:], self._data_symbol_table, self._code_symbol_table, self._code_address)
-            self._outputFileStream.writeLine("{:04X}  ".format(self._code_address) + str(Opcode.opcodeFactory(strarr[0], operands)))
+            code_out = "{:04X}  ".format(self._code_address) + str(Opcode.opcodeFactory(strarr[0], operands))
+            self._outputFileStream.writeLine(code_out + ";     " + rawline.strip())
         except Exception as error:
             ErrorHandler.genericError(fin.name, line_num, error)
 
@@ -71,7 +72,7 @@ class Parser:
         # line is indented
         if re.match(r'\s', line):
             if self._second_parse:
-                self._codeGen(split_line, line_num, fin)
+                self._codeGen(split_line, line_num, fin, line)
 
             self._code_address += 1
 
@@ -87,6 +88,8 @@ class Parser:
                 else:
                     ErrorHandler.genericError(fin.name, line_num, f"\"{split_line[0]}\" is not a valid statement"
                                                                         "on the first column.")
+            else:
+                self._outputFileStream.writeLine("          ; " + split_line[0])
         
             
 
