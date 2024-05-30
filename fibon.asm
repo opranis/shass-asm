@@ -13,7 +13,6 @@
 ;     8 Jan 20  Glen George      Updated comments
 ;     9 Feb 21  Glen George      Updated comments
 
-.cseg
 
 start			;initialize variables
     LDI   0
@@ -29,27 +28,25 @@ FibLoop			;loop, computing nth Fibonacci number
     ;JNZ  FibBody		;otherwise compute the next number
     STD   n			;always store new value of n (branch slot)
 
-; .include fibon_cpy.asm
-; .cseg
 FibBody			;compute the next fibonacci number
     LDD   f1		;get the value of f1 in accumulator
-    ADD   f2	;compute new fibonacci number (f1+f2)
+    ADD   f2		;compute new fibonacci number (f1+f2)
     STD   f			;and store it
-    STD   f1    	;also store it in f1, it is new f[n-1]
-    SUB   S f2		;subtract f2 from f to get old f1
+    STD   f1		;also store it in f1, it is new f[n-1]
+    SUB   f2		;subtract f2 from f to get old f1
     STD   f2		;store this in f2, it is new f[n-2]
     JMP   FibLoop		;and loop
-    NOP         	;branch slot
+    NOP			;branch slot
 
 Done			;done with the calculation
     LDD   f			;get returned Fibonacci value into accumulator
     RTS                     ;and return
-    ST   S+ 13
-    ; ST   X o
+
+
 
 .dseg
-f       1
-f1      1
 
-f2      1
-n       1
+f       1			;the current Fibonacci number
+f1      1			;the Fibonacci number from last time
+f2      1     		;the Fibonacci number from 2 times ago
+n       1			;the desired Fibonacci number index
