@@ -14,7 +14,6 @@
 ;     9 Feb 21  Glen George      Updated comments
 
 .cseg
-.org 12
 
 start			;initialize variables
     LDI   $0
@@ -31,7 +30,7 @@ FibLoop			;loop, computing nth Fibonacci number
     STD   n			;always store new value of n (branch slot)
 
 .include fibon_cpy.asm
-.cseg
+; .cseg
 FibBody			;compute the next fibonacci number
     LDD   f1		;get the value of f1 in accumulator
     ADD   f2		;compute new fibonacci number (f1+f2)
@@ -49,5 +48,6 @@ Done			;done with the calculation
 .dseg
 ff       1
 ff1      1
+
 ff2      1
 nf       1

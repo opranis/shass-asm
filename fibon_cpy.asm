@@ -13,7 +13,7 @@
 ;     8 Jan 20  Glen George      Updated comments
 ;     9 Feb 21  Glen George      Updated comments
 
-.cseg
+; .cseg
 
 start1			;initialize variables
     LDI   $0
