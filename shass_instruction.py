@@ -1,160 +1,10 @@
-import sys
-import os.path
 import re
-
-class CommandLineInputParser:
-    def __init__(self):
-        # get the argument for the main file
-        self._main_file = ErrorHandler.getCommandLineArgument()
-        # check that it exists
-        ErrorHandler.checkFileExists(self._main_file)
-    
-    def getEntryFile(self):
-        return self._main_file
-
-class Parser:
-    def __init__(self, entry_file):
-        self._file_read = open(entry_file, "r")
-        self._file_read_secondary = 0
-        self._code_address = 0
-        self._data_address = 0
-        self._code_symbol_table = {}
-        self._data_symbol_table = {}
-        self._code_segment = True
-        self._second_parse = False
-        self._outputFileStream = None
-
-    def setCodeOrigin(self, num):
-        if not self._code_segment:
-            raise Exception("\".org\" cannot be set in a data segment!")
-        self._code_address = int(num)
-
-    def setCodeSegment(self):
-        self._code_segment = True
-
-    def setDataSegment(self):
-        self._code_segment = False
-
-    def includeFile(self, filename):
-        if self._file_read_secondary != 0:
-            raise Exception("Cannot include into included files.")
-        if filename == self._file_read.name:
-            raise Exception("Cannot open file that is already being read.")
-        
-        currentSeg = self._code_segment
-        self.setCodeSegment()
-        self._file_read_secondary = open(filename, "r")
-        self._parse(True)
-        self._file_read_secondary.close()
-        self._file_read_secondary = 0
-        self._code_segment = currentSeg
-
-    def _parsePseudoOp(self, split_line, line_num, fin):
-        try:
-            if len(split_line) > 1:
-                PseudoOp.handlePseudoOp(self, split_line[0], split_line[1])
-            else:
-                PseudoOp.handlePseudoOp(self, split_line[0])
-        except Exception as error:
-            ErrorHandler.genericError(fin.name, line_num, error)
-
-    def _codeGen(self, strarr, line_num, fin, rawline):
-        try:
-            operands = Operands(strarr[1:], self._data_symbol_table, self._code_symbol_table, self._code_address)
-            code_out = "{:04X}  ".format(self._code_address) + str(Opcode.opcodeFactory(strarr[0], operands))
-            self._outputFileStream.writeLine(code_out + ";     " + rawline.strip())
-        except Exception as error:
-            ErrorHandler.genericError(fin.name, line_num, error)
-
-
-    def _parseCodeSeg(self, line, split_line, line_num, fin):
-
-        # line is indented
-        if re.match(r'\s', line):
-            if self._second_parse:
-                self._codeGen(split_line, line_num, fin, line)
-
-            self._code_address += 1
-
-        # if there is something in the first column
-        else:
-            if re.match(r'\.', line): # matches a pseudoop
-                self._parsePseudoOp(split_line, line_num, fin)
-            elif not self._second_parse:
-                if split_line[0].isalnum():
-                    if split_line[0] in self._code_symbol_table:
-                        ErrorHandler.genericError(fin.name, line_num, f"Label \"{split_line[0]}\" already defined.")
-                    self._code_symbol_table[split_line[0]] = self._code_address
-                else:
-                    ErrorHandler.genericError(fin.name, line_num, f"\"{split_line[0]}\" is not a valid statement"
-                                                                        "on the first column.")
-            else:
-                self._outputFileStream.writeLine("          ; " + split_line[0])
-        
-            
-
-    def _parseDataSeg(self, line, split_line, line_num, fin):
-
-        # Check if there is something in the first column
-        if not re.match(r'\s', line):
-            if re.match(r'\.', line): # matches a pseudoop
-                self._parsePseudoOp(split_line, line_num, fin)
-            elif not self._second_parse:
-                if split_line[0].isalnum():
-                    if split_line[0] in self._data_symbol_table:
-                        ErrorHandler.genericError(fin.name, line_num, f"Variable \"{split_line[0]}\" already defined.")
-                    self._data_symbol_table[split_line[0]] = self._data_address
-                    if len(split_line) < 2 or not split_line[1].isnumeric():
-                        ErrorHandler.genericError(fin.name, line_num, "Invalid variable length supplied.")
-                    self._data_address += int(split_line[1])
-                else:
-                    ErrorHandler.genericError(fin.name, line_num, f"\"{split_line[0]}\" is not a valid statement"
-                                                                        "on the first column.")
-                
-        # data segment should not have any lines with text starting after first column
-        else:
-            ErrorHandler.genericError(fin.name, line_num, "All valid statements in data segment "
-                                                          "should start on first column.")
-
-
-    def _parse(self, secondary_file = False):
-        filestream = self._file_read_secondary if secondary_file else self._file_read
-        line_num = 1
-        while True:
-            # read in lines until end of file is reached
-            line = filestream.readline()
-            if not line:
-                break
-
-            # Remove comments from parsing
-            line += " "
-            line = line[:line.find(';')]
-
-            # Split the line on whitespace
-            split_line = line.split()
-
-            if len(split_line) > 0:
-                if self._code_segment:
-                    self._parseCodeSeg(line, split_line, line_num, filestream)
-                else:
-                    self._parseDataSeg(line, split_line, line_num, filestream)
-                
-            line_num += 1
-
-    def first_parse(self):
-        self._parse()
-
-    def second_parse(self, f):
-        self._second_parse = True
-        self._code_address = 0
-        self._data_address = 0
-        self._code_segment = True
-        self._outputFileStream = f
-        self._file_read.seek(0)
-        self._parse()
-        self._file_read.close()
+from shass_error import *
 
 class Opcode:
+    """Generic parent class for handling an instruction by a given opcode."""
+
+    # Constants for translating opcodes into bytecode
     no_operand_codes = {
         "ASR": 0b0111000100000001,
         "DEC": 0b0111101100000000,
@@ -247,6 +97,8 @@ class Opcode:
         self._opcode = opcode
 
     def opcodeFactory(opcode, operand):
+        """Returns the correct child class for a given opcode."""
+
         if opcode in Opcode.no_operand_codes:
             return NoOperandOpcode(opcode, operand)
         elif opcode in Opcode.one_operand_codes:
@@ -261,6 +113,8 @@ class Opcode:
             raise Exception(f"Opcode {opcode} is not defined.")
 
 class NoOperandOpcode(Opcode):
+    """Child opcode class for instructions with no operands."""
+
     def __init__(self, opcode, operand):
         super().__init__(opcode)
         if operand.getCount() != 0:
@@ -270,6 +124,8 @@ class NoOperandOpcode(Opcode):
         return "{:04X}".format(Opcode.no_operand_codes[self._opcode])
 
 class OneOperandOpcode(Opcode):
+    """Child opcode class for instructions with a single operand."""
+
     def __init__(self, opcode, operand):
         super().__init__(opcode)
         if operand.getCount() != 1:
@@ -282,6 +138,8 @@ class OneOperandOpcode(Opcode):
         return opcode_str + operand_str
 
 class LongOperandOpcode(Opcode):
+    """Child opcode class for instructions with a long (13-bit) single operand."""
+
     def __init__(self, opcode, operand):
         super().__init__(opcode)
         if operand.getCount() != 1:
@@ -290,10 +148,14 @@ class LongOperandOpcode(Opcode):
 
     def __str__(self):
         opcode_str = "{:03b}".format(Opcode.long_operand_codes[self._opcode])
+
+        # Long operands correspond to absolute addresses, so pass with corresponding arg.
         operand_str = "{:013b}".format(self._operand.evaluateOneOperand(absolute = True))
         return "{:04X}".format(int(opcode_str + operand_str, 2))
 
 class StLdOpcode(Opcode):
+    """Child opcode class for store and load instructions."""
+
     def __init__(self, opcode, operand):
         super().__init__(opcode)
         if operand.getCount() != 2:
@@ -302,45 +164,72 @@ class StLdOpcode(Opcode):
 
     def __str__(self):
         opcode_str = "{:03b}".format(Opcode.st_ld_codes[self._opcode])
+
+        # Get the correct pattern for +X, -X, X+, X- etc.
         opcode_str += self._operand.sxPattern()
+
+        # Evaluate other operand, but swap order, since it is the second one
         operand_str = "{:08b}".format(self._operand.evaluateOneOperand(swap = True))
+
         return "{:04X}".format(int(opcode_str + operand_str, 2))
 
 class AluOpcode(Opcode):
+    """Child opcode class for ALU instructions."""
+
     def __init__(self, opcode, operand):
         super().__init__(opcode)
         self._operand = operand
 
     def __str__(self):
         opcode_str = "{:06b}".format(Opcode.alu_codes[self._opcode])
+
+        # If only a single operand given, it is absolute addressing
         if self._operand.getCount() == 1:
             opcode_str += "00"
             operand_str = "{:08b}".format(self._operand.evaluateOneOperand())
+
+        # If X is passed as the first argument
         elif self._operand.aluX():
             opcode_str += "01"
             operand_str = "{:08b}".format(self._operand.evaluateOneOperand(swap = True))
+
+        # If S is passed as the first argument
         else:
             opcode_str += "10"
             operand_str = "{:08b}".format(self._operand.evaluateOneOperand(swap = True))
+
+
         return "{:04X}".format(int(opcode_str + operand_str, 2))
 
-
 class Operands:
+    """Class handling the various types of operands passed to an instruction."""
+
     def __init__(self, operand_arr, dsym, csym, ip):
         if len(operand_arr) > 2:
             raise Exception("An instruction can have no more than 2 operands.")
         
+        # Set number of operands passed
         self._op_count = len(operand_arr)
+
+        # Set the operands themselves
         self._op1 = None if self._op_count == 0 else operand_arr[0]
         self._op2 = None if self._op_count < 2 else operand_arr[1]
+
+        # Store data and code symbol tables
         self._dsym = dsym
         self._csym = csym
+
+        # Store current instruction pointer
         self._ip = ip
 
     def getCount(self):
+        """Return amount of operands given."""
+
         return self._op_count
     
     def aluX(self):
+        """Return whether X or S is passed to an ALU instruction."""
+
         if self._op1 == "X":
             return True
         elif self._op1 == "S":
@@ -349,12 +238,16 @@ class Operands:
             raise Exception("First operand needs to be either \"S\" or \"X\".")
 
     def sxPattern(self):
+        """Get store/load instruction pattern."""
+
         pat = re.search(r"[+-][SX]|[SX][+-]|[SX]", self._op1)
         pat = pat.group()
 
+        # Check that the argument contains ONLY S/X and +/-
         if len(pat) != len(self._op1):
             raise Exception(f"Invalid argument: {self._op1}")
         
+        # Set the correct pattern according to datasheet.
         prepost = "1" if len(pat) == 1 or pat[1] == "+" or pat[1] == "-" else "0"
         incdec = "0" if len(pat) == 1 or pat[0] == "+" or pat[1] == "+" else "1"
         sx = "0" if "S" in pat else "1" 
@@ -363,35 +256,59 @@ class Operands:
         return prepost+incdec+sx+addrmode
     
     def evaluateOneOperand(self, absolute = False, swap = False):
+        """Evaluate a single generic operand"""
+
+        # Absolute: no difference between label and IP should be calculated
+        # Swap: the argument is given as the second one
+
+        # Return value initially zero.
         num = 0
+
         op = self._op1 if not swap else self._op2
+
+        # immediate value - just copy in
         if op.isnumeric():
-            # immediate value - just copy in
             num = int(op)
+
+        # If in the code symbol table
         elif op in self._csym:
             num = self._csym[op]
             
             # relative jump - calculate offset
             if not absolute:
                 num = num - self._ip - 1
+
+                # If negative, two's complement
                 if num < 0:
                     num = (1<<8) + num
 
+        # variable - look up and copy in
         elif op in self._dsym:
-            # variable - look up and copy in
             num = self._dsym[op]
+
+        # instruction pointer - just copy in
         elif op == ".IP":
-            # instruction pointer - just copy in
             num = self._ip
+
+            # relative jump - calculate offset
+            if not absolute:
+                num = num - self._ip - 1
+
+                # If negative, two's complement
+                if num < 0:
+                    num = (1<<8) + num
         else:
             raise Exception("Invalid argument given.")
         
+        # Check for a valid range for 13 or 8 bit number
         if not (0 <= num <= 8191 if absolute else 255):
             raise Exception("Argument outside range.")
 
         return num
-
+    
 class PseudoOp:
+    """Handles a pseudo-op operation."""
+
     def handlePseudoOp(parser, op, arg=""):
         if op == ".org":
             if not arg.isnumeric():
@@ -402,49 +319,7 @@ class PseudoOp:
         elif op == ".dseg":
             parser.setDataSegment()
         elif op == ".include":
-            if not os.path.isfile(arg):
-                raise Exception(f"File \"{arg}\" does not exist.")
+            ErrorHandler.checkFileExists(arg, True)
             parser.includeFile(arg)
         else:
             raise Exception(f"Pseudo op \"{op}\" does not exist.")
-
-class FileWriter:
-    def __init__(self):
-        self.filewrite = open("a.obj", "w")
-
-    def writeLine(self, str):
-        self.filewrite.write(str + "\n")
-
-    def close(self):
-        self.writeLine("")
-        self.filewrite.close()
-
-class ErrorHandler:
-    def genericError(file, line_num, message):
-        print(f"Error in file \"{file}\" on line {line_num}:")
-        print("    ", message)
-        quit()
-
-    def getCommandLineArgument():
-        try:
-            return sys.argv[1]
-        except:
-            return "main.asm"
-
-    def checkFileExists(file):
-        if not os.path.isfile(file):
-            print(f"File \"{file}\" does not exist.")
-            quit()
-
-# Start execution of the assembler
-entry_file = CommandLineInputParser().getEntryFile()
-parser = Parser(entry_file)
-
-f = FileWriter()
-
-parser.first_parse()
-parser.second_parse(f)
-
-f.close()
-
-print("Assembler finished successfully!")
