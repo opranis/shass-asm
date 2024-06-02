@@ -1,0 +1,47 @@
+          ; Swap
+0000  8000;     LDD   var1
+0001  0780;     TAX
+0002  8001;     LDD   var2
+0003  A000;     STD   var1
+0004  6701;     TXA
+0005  A001;     STD   var2
+          ; 16RightShift
+0006  8002;     LDD   a16High
+0007  7100;     LSR
+0008  A002;     STD   a16High
+0009  8003;     LDD   a16Low
+000A  7103;     RRC
+000B  A003;     STD   a16Low
+          ; 16Subtract
+000C  8003;     LDD   a16Low
+000D  1005;     SUB   b16Low
+000E  A003;     STD   a16Low
+000F  8002;     LDD   a16High
+0010  1804;     SBB   b16High
+0011  A002;     STD   a16High
+          ; 16Compare
+0012  8002;     LDD   a16High
+0013  3004;     CMP   b16High
+0014  8F0B;     JB    aLTb
+0015  8003;     LDD   a16Low
+0016  8807;     JA    aGTb
+0017  3005;     CMP   b16Low
+0018  8F07;     JB    aLTb
+0019  1F80;     NOP
+001A  8803;     JA    aGTb
+001B  1F80;     NOP
+          ; aEQb
+001C  C022;     JMP   elsewhere
+001D  1F80;     NOP
+          ; aGTb
+001E  C022;     JMP   elsewhere
+001F  1F80;     NOP
+          ; aLTb
+0020  C022;     JMP   elsewhere
+0021  1F80;     NOP
+          ; elsewhere
+0022  1F80;     NOP
+0023  1F80;     NOP
+0024  1F80;     NOP
+0025  C025;     JMP   .IP
+

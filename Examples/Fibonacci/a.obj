@@ -1,0 +1,24 @@
+          ; start
+0000  8900;     LDI   0
+0001  A002;     STD   f2
+0002  0000;     INC
+0003  A001;     STD   f1
+0004  A000;     STD   f
+          ; FibLoop
+0005  8003;     LDD   n
+0006  7B00;     DEC
+0007  9F09;     JZ    Done
+0008  A003;     STD   n
+          ; FibBody
+0009  8001;     LDD   f1
+000A  6802;     ADD   f2
+000B  A000;     STD   f
+000C  A001;     STD   f1
+000D  1002;     SUB   f2
+000E  A002;     STD   f2
+000F  C005;     JMP   FibLoop
+0010  1F80;     NOP
+          ; Done
+0011  8000;     LDD   f
+0012  1F00;     RTS
+
