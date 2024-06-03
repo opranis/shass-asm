@@ -1,0 +1,79 @@
+          ; Test
+0009  7B00;     DEC
+000A  7101;     ASR
+000B  0000;     INC
+000C  5800;     LSL
+000D  7100;     LSR
+000E  2700;     NEG
+000F  2D00;     NOT
+          ; Label2
+0010  5000;     RLC
+0011  5200;     ROL
+0012  7102;     ROR
+0013  7103;     RRC
+0014  7F81;     STI
+0015  0769;     CLI
+0016  7F22;     STU
+0017  07CA;     CLU
+0018  7F0C;     STC
+0019  07E4;     CLC
+001A  0780;     TAX
+001B  6701;     TXA
+001C  0580;     INX
+001D  0D80;     DEX
+001E  0750;     TAS
+001F  6700;     TSA
+0020  0640;     INS
+0021  0E40;     DES
+0022  1F00;     RTS
+0023  0200;     POPF
+0024  0E00;     PUSHF
+0025  1F80;     NOP
+0026  630A;     ADCI    10
+0027  6B0A;     ADDI    10
+0028  470A;     ANDI    10
+0029  330A;     CMPI    10
+002A  770A;     ORI     10
+002B  1B0A;     SBBI    10
+002C  130A;     SUBI    10
+002D  4F0A;     TSTI    10
+002E  370A;     XORI    10
+002F  890A;     LDI     10
+0030  8002;     LDD     variable
+0031  A002;     STD     variable
+0032  88D6;     JA      Test
+0033  8CD5;     JNC     Test
+0034  8CFF;     JAE     .IP
+0035  8FD3;     JC      Test
+0036  8FD2;     JB      Test
+0037  8BD1;     JBE     Test
+0038  9FD0;     JE      Test
+0039  9FCF;     JZ      Test
+003A  AFCE;     JG      Test
+003B  BBCD;     JGE     Test
+003C  B8CC;     JL      Test
+003D  ACCB;     JLE     Test
+003E  9CCA;     JNZ     Test
+003F  9CC9;     JNE     Test
+0040  98C8;     JNS     Test
+0041  BCC7;     JNU     Test
+0042  A8C6;     JNV     Test
+0043  9BC5;     JS      Test
+0044  BFC4;     JU      Test
+0045  ABC3;     JV      Test
+0046  900A;     IN      10
+0047  B00A;     OUT     10
+0048  C048;     JMP     .IP
+0049  E009;     CALL    Test
+004A  B60A;     ST      X+ 10
+004B  8A21;     LD      -S 33
+004C  6036;     ADC     54
+004D  6A20;     ADD     S 32
+004E  451F;     AND     X 31
+004F  320A;     CMP     S 10
+0050  7403;     OR      variable5
+0051  1802;     SBB     variable
+0052  1002;     SUB     variable
+0053  4C01;     TST     variable3
+0054  3400;     XOR     variable2
+

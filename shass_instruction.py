@@ -183,6 +183,9 @@ class AluOpcode(Opcode):
     def __str__(self):
         opcode_str = "{:06b}".format(Opcode.alu_codes[self._opcode])
 
+        if self._operand.getCount() == 0:
+            raise Exception("ALU operation needs at least one operand.")
+
         # If only a single operand given, it is absolute addressing
         if self._operand.getCount() == 1:
             opcode_str += "00"
@@ -241,6 +244,10 @@ class Operands:
         """Get store/load instruction pattern."""
 
         pat = re.search(r"[+-][SX]|[SX][+-]|[SX]", self._op1)
+
+        if not pat:
+            raise Exception("Invalid pattern given for first operand.")
+
         pat = pat.group()
 
         # Check that the argument contains ONLY S/X and +/-

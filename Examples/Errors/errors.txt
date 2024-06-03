@@ -1,0 +1,77 @@
+opranis@pop-os:~/shass-asm$ ./shass_main.py
+Error in file "main.asm" on line 12:
+     File "main_inc" does not exist.
+
+
+opranis@pop-os:~/shass-asm$ ./shass_main.py
+Error in file "main_inc.asm" on line 22:
+     Invalid variable length supplied.
+
+     
+opranis@pop-os:~/shass-asm$ ./shass_main.py
+Error in file "main.asm" on line 77:
+     Variable "variable" already defined.
+
+
+opranis@pop-os:~/shass-asm$ ./shass_main.py
+Error in file "main.asm" on line 30:
+     Opcode CMPI should have 1 argument.
+
+
+opranis@pop-os:~/shass-asm$ ./shass_main.py
+Error in file "main.asm" on line 30:
+     Opcode CMPI should have 1 argument.
+
+
+opranis@pop-os:~/shass-asm$ ./shass_main.py
+Error in file "main.asm" on line 31:
+     Opcode ORI should have 1 argument.
+
+
+opranis@pop-os:~/shass-asm$ ./shass_main.py
+Error in file "main.asm" on line 37:
+     Opcode LDD should have 1 argument.
+
+
+opranis@pop-os:~/shass-asm$ ./shass_main.py
+Error in file "main.asm" on line 41:
+     Opcode JAE should have 1 argument.
+
+
+opranis@pop-os:~/shass-asm$ ./shass_main.py
+Error in file "main.asm" on line 43:
+     Opcode JB should have 1 argument.
+
+
+opranis@pop-os:~/shass-asm$ ./shass_main.py
+Error in file "main.asm" on line 60:
+     Opcode OUT should have 1 argument.
+
+
+opranis@pop-os:~/shass-asm$ ./shass_main.py
+Error in file "main.asm" on line 62:
+     Opcode CALL should have 1 argument.
+
+     
+opranis@pop-os:~/shass-asm$ ./shass_main.py
+Error in file "main.asm" on line 63:
+     Opcode ST should have 2 arguments.
+
+
+opranis@pop-os:~/shass-asm$ ./shass_main.py
+Error in file "main.asm" on line 63:
+     Invalid pattern given for first operand.
+
+
+opranis@pop-os:~/shass-asm$ ./shass_main.py
+Error in file "main.asm" on line 67:
+     ALU operation needs at least one operand.
+
+
+opranis@pop-os:~/shass-asm$ ./shass_main.py
+Error in file "main.asm" on line 70:
+     ALU operation needs at least one operand.
+
+     
+opranis@pop-os:~/shass-asm$ ./shass_main.py
+Assembler finished successfully!
